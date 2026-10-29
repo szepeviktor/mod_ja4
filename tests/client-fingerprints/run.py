@@ -32,8 +32,7 @@ CASES = [
      'node /clients/client.js'),
     ('go', 'Go', 'golang:1-bookworm', 'net/http / crypto/tls',
      'go run /clients/client.go'),
-    ('rust', 'Rust', 'rust:1-bookworm', 'native-tls / OpenSSL',
-     'apt-get update >&2; apt-get install -y --no-install-recommends pkg-config libssl-dev >&2; '
+    ('rust', 'Rust', 'rust:1-bookworm', 'reqwest / rustls (default TLS)',
      'cp -R /clients/rust /tmp/rust; cd /tmp/rust; rustc --version; cargo run --quiet; '
      'cp Cargo.lock /results/rust-Cargo.lock'),
 ]

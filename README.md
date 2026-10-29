@@ -149,7 +149,8 @@ HTTPS server running `mod_ja4`. C and C++ have separate requests. The selected
 HTTPS APIs and actual runtime/TLS versions appear alongside each JA4 in the
 workflow run's **Summary** tab, followed by the complete raw fingerprints.
 The Markdown report, JSON data, image digests and logs are also uploaded as an
-Actions artifact. The Rust dependency lockfile is included for reference.
+Actions artifact. Rust uses reqwest 0.13 with its default rustls TLS backend;
+the resolved dependency versions are included in the Rust lockfile artifact.
 
 Run it manually from Actions, or change the workflow, client fixtures or module
 sources to trigger a run on a push or pull request. To run it locally with Docker:
