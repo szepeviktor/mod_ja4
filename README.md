@@ -29,15 +29,6 @@ From this repository's root directory, compile both C files into one module:
 make APXS=/usr/bin/apxs
 ```
 
-Alternatively, the equivalent direct build command is:
-
-```sh
-apxs -c -Wc,-Wall -Wc,-Wextra -Wc,-Werror mod_ja4.c ja4.c -lcrypto -lssl
-```
-
-Build output: `.libs/mod_ja4.so` and its libtool descriptor `mod_ja4.la`.
-Use the `apxs` belonging to the target Apache installation.
-
 Install the module under `/usr/local/`, following the same layout as
 [mod_444](https://github.com/szepeviktor/apache-httpd-module-444-drop/blob/master/README.md):
 
@@ -127,6 +118,26 @@ cipher, extension and signature lists. Counts saturate at 99.
 Parsing checks all consumed lengths, rejects duplicate extensions and limits
 the handshake input to 128 KiB. Malformed messages produce no fingerprint and
 do not change OpenSSL's decision to accept or reject the connection.
+
+## Release builds
+
+The `Build Debian modules` GitHub Actions workflow builds and runs the parser
+tests in the official `debian:11-slim`, `debian:12-slim` and `debian:13-slim`
+Docker images. Builds run for pushes to `master`, pull requests, version tags
+and manual workflow dispatches. Each build uploads an Actions artifact.
+
+Pushing a `v*` tag also creates a GitHub Release after all three builds succeed:
+
+```sh
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Release assets include `mod_ja4-debian11-amd64.so`,
+`mod_ja4-debian12-amd64.so`, `mod_ja4-debian13-amd64.so`, their build information
+files and `SHA256SUMS`. Re-running the tag workflow replaces matching assets.
+Select the binary matching your Debian release and amd64 architecture, and
+install it as `/usr/local/lib/apache2/modules/mod_ja4.so`.
 
 ## Tests
 
