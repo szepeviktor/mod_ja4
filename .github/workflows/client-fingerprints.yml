@@ -1,0 +1,50 @@
+name: HTTPS client fingerprints
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/client-fingerprints.yml'
+      - 'tests/client-fingerprints/**'
+      - 'ja4.c'
+      - 'ja4.h'
+      - 'mod_ja4.c'
+      - 'Makefile'
+  pull_request:
+    paths:
+      - '.github/workflows/client-fingerprints.yml'
+      - 'tests/client-fingerprints/**'
+      - 'ja4.c'
+      - 'ja4.h'
+      - 'mod_ja4.c'
+      - 'Makefile'
+
+permissions:
+  contents: read
+
+jobs:
+  fingerprints:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Send HTTPS requests and capture JA4
+        run: python3 tests/client-fingerprints/run.py
+      - name: Publish Markdown summary
+        if: always()
+        run: |
+          if [ -f fingerprint-results/summary.md ]; then
+            cat fingerprint-results/summary.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'Fingerprint collection failed before producing a report. See the job log.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload report and raw logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: https-client-fingerprints
+          path: fingerprint-results/
+          if-no-files-found: warn

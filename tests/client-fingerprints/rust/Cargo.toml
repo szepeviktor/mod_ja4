@@ -1,0 +1,8 @@
+[package]
+name = "ja4-test-client"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+native-tls = "0.2"
+openssl = "0.10"

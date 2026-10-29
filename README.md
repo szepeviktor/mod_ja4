@@ -141,6 +141,32 @@ install it as `/usr/local/lib/apache2/modules/mod_ja4.so`.
 
 ## Tests
 
+### HTTPS client comparison
+
+The **HTTPS client fingerprints** workflow sends a request from official `gcc`,
+`python`, `php`, `ruby`, `node` and `rust` Docker images to a local dummy Apache
+HTTPS server running `mod_ja4`. C and C++ have separate requests. The selected
+HTTPS APIs and actual runtime/TLS versions appear alongside each JA4 in the
+workflow run's **Summary** tab, followed by the complete raw fingerprints.
+The Markdown report, JSON data, image digests and logs are also uploaded as an
+Actions artifact. The Rust dependency lockfile is included for reference.
+
+Run it manually from Actions, or change the workflow, client fixtures or module
+sources to trigger a run on a push or pull request. To run it locally with Docker:
+
+```sh
+python3 tests/client-fingerprints/run.py
+```
+
+The clients only contact the local self-signed HTTPS fixture, with certificate
+verification disabled for that fixture. Package installation and image/dependency
+downloads require internet access. Images select current versions within their
+tags; the workflow records the resolved image digests and does not force OpenSSL
+1.1.1. Results describe a particular runtime, HTTPS API and TLS configuration,
+not a unique fingerprint for a programming language.
+
+### Module tests
+
 ```sh
 make test
 make integration
