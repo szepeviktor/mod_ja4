@@ -146,6 +146,9 @@ install it as `/usr/local/lib/apache2/modules/mod_ja4.so`.
 The **HTTPS client fingerprints** workflow sends a request from official `gcc`,
 `python`, `php`, `ruby`, `node`, `golang` and `rust` Docker images to a local dummy Apache
 HTTPS server running `mod_ja4`. C and C++ have separate requests. The selected
+clients run in parallel GitHub Actions matrix jobs with independent status and
+logs, using a shared server image built once per workflow run. A final job combines
+their results, including failed or missing measurements, into one report. The
 HTTPS APIs and actual runtime/TLS versions appear alongside each JA4 in the
 workflow run's **Summary** tab, followed by the complete raw fingerprints.
 The Markdown report, JSON data, image digests and logs are also uploaded as an
@@ -158,6 +161,11 @@ sources to trigger a run on a push or pull request. To run it locally with Docke
 ```sh
 python3 tests/client-fingerprints/run.py
 ```
+
+To measure a single client locally, add `--client rust` (or `c`, `cpp`, `python`,
+`php`, `ruby`, `node`, `go`). Individual CI artifacts are named `https-client-<client>`;
+the combined `https-client-fingerprints` artifact keeps each client's logs,
+certificate and image digests under `clients/<client>/`.
 
 The clients only contact the local HTTPS fixture. Every client trusts
 the local test CA explicitly and verifies both the server certificate and the

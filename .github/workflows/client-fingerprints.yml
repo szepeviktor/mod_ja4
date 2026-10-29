@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/workflows/client-fingerprints.yml'
       - 'tests/client-fingerprints/**'
+      - 'tests/test_client_fingerprints.py'
       - 'ja4.c'
       - 'ja4.h'
       - 'mod_ja4.c'
@@ -15,6 +16,7 @@ on:
     paths:
       - '.github/workflows/client-fingerprints.yml'
       - 'tests/client-fingerprints/**'
+      - 'tests/test_client_fingerprints.py'
       - 'ja4.c'
       - 'ja4.h'
       - 'mod_ja4.c'
@@ -24,15 +26,79 @@ permissions:
   contents: read
 
 jobs:
-  fingerprints:
+  build-server:
+    name: Build test server
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 15
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+      - name: Define client matrix
+        id: matrix
+        run: echo "matrix=$(python3 tests/client-fingerprints/run.py --matrix)" >> "$GITHUB_OUTPUT"
+      - name: Test report aggregation
+        run: python3 -B tests/test_client_fingerprints.py
+      - name: Build shared server image
+        run: |
+          docker build --pull -t mod-ja4-fingerprint-server:local -f tests/client-fingerprints/Dockerfile .
+          docker save -o server-image.tar mod-ja4-fingerprint-server:local
+      - uses: actions/upload-artifact@v7
+        with:
+          name: fingerprint-server-image
+          path: server-image.tar
+          retention-days: 1
+          compression-level: 0
+
+  fingerprints:
+    name: Measure ${{ matrix.client }}
+    needs: build-server
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.build-server.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v8
+        with:
+          name: fingerprint-server-image
+          path: server-image
+      - name: Load shared server image
+        run: docker load -i server-image/server-image.tar
       - name: Send HTTPS requests and capture JA4
-        run: python3 tests/client-fingerprints/run.py
+        env:
+          CLIENT: ${{ matrix.client }}
+        run: python3 tests/client-fingerprints/run.py --client "$CLIENT" --skip-build
+      - name: Upload client result and raw logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: https-client-${{ matrix.client }}
+          path: fingerprint-results/
+          if-no-files-found: warn
+
+  report:
+    name: Combine client reports
+    needs: [build-server, fingerprints]
+    if: ${{ always() && needs.build-server.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: https-client-*
+          path: fingerprint-inputs
+      - name: Generate combined report
+        if: always()
+        run: python3 tests/client-fingerprints/run.py --aggregate fingerprint-inputs
       - name: Publish Markdown summary
         if: always()
         run: |

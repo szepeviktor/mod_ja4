@@ -1,8 +1,10 @@
-"""Capture HTTPS client fingerprints on an isolated Docker bridge network."""
+"""Measure one HTTPS client, or combine the results of matrix jobs."""
+import argparse
 import html
 import json
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import time
 
@@ -54,6 +56,18 @@ def report(rows, error=None):
             parts = line.split('\t')
             if len(parts) == 4:
                 captured[parts[0]] = parts[1:]
+    records = []
+    for row in rows:
+        key, language, image, api, runtime, succeeded = row
+        status, ja4, raw = captured.get(f'/{key}.txt', ('-', '-', '-'))
+        valid = succeeded and status == '200' and bool(re.fullmatch(
+            r't[0-9a-z]{2}[di][0-9]{4}[0-9A-Za-z]{2}_[0-9a-f]{12}_[0-9a-f]{12}', ja4))
+        records.append(dict(language=language, image=image, api=api, runtime=runtime,
+                            ja4=ja4, ja4_raw=raw, success=valid))
+    return write_report(records, error)
+
+
+def write_report(records, error=None):
     lines = [
         '# HTTPS client JA4 fingerprints', '',
         'Measured by a local Apache HTTPS server running this checkout of `mod_ja4`.',
@@ -63,18 +77,10 @@ def report(rows, error=None):
         '| Language | Official Docker image | HTTPS API | Runtime / TLS | JA4 | Result |',
         '| --- | --- | --- | --- | --- | --- |',
     ]
-    failed = bool(error)
-    records = []
-    for row in rows:
-        key, language, image, api, runtime, succeeded = row
-        status, ja4, raw = captured.get(f'/{key}.txt', ('-', '-', '-'))
-        valid = succeeded and status == '200' and bool(re.fullmatch(
-            r't[0-9a-z]{2}[di][0-9]{4}[0-9A-Za-z]{2}_[0-9a-f]{12}_[0-9a-f]{12}', ja4))
-        failed |= not valid
-        lines.append('| ' + ' | '.join(map(cell, [language, image, api, runtime,
-                                                  ja4, 'OK' if valid else 'FAILED'])) + ' |')
-        records.append(dict(language=language, image=image, api=api, runtime=runtime,
-                            ja4=ja4, ja4_raw=raw, success=valid))
+    for record in records:
+        values = [record[field] for field in ('language', 'image', 'api', 'runtime', 'ja4')]
+        values.append('OK' if record['success'] else 'FAILED')
+        lines.append('| ' + ' | '.join(map(cell, values)) + ' |')
     lines += ['', '## Raw fingerprints', '']
     for record in records:
         lines += [f"### {record['language']}", '', '```text', record['ja4_raw'], '```', '']
@@ -89,18 +95,40 @@ def report(rows, error=None):
         lines += ['## Collection error', '', html.escape(str(error)), '']
     (RESULTS / 'summary.md').write_text('\n'.join(lines))
     (RESULTS / 'results.json').write_text(json.dumps(records, indent=2) + '\n')
-    return failed
+    return bool(error) or any(not record['success'] for record in records)
 
 
-def main():
+def aggregate(source):
+    RESULTS.mkdir(exist_ok=True)
+    records = []
+    for key, language, image, api, _ in CASES:
+        directory = source / f'https-client-{key}'
+        result = directory / 'results.json'
+        if result.exists():
+            rows = json.loads(result.read_text())
+        else:
+            rows = []
+        if len(rows) == 1 and rows[0]['language'] == language:
+            records.append(rows[0])
+        else:
+            records.append(dict(language=language, image=image, api=api,
+                                runtime='Missing matrix result', ja4='-', ja4_raw='-',
+                                success=False))
+        if directory.exists():
+            shutil.copytree(directory, RESULTS / 'clients' / key, dirs_exist_ok=True)
+    return int(write_report(records))
+
+
+def collect(cases, skip_build=False):
     RESULTS.mkdir(exist_ok=True)
     rows, digests, error = [], {}, None
     network_created = server_started = False
     try:
         run(['docker', 'network', 'create', NETWORK])
         network_created = True
-        run(['docker', 'build', '--pull', '-t', SERVER_IMAGE, '-f',
-             str(CLIENTS / 'Dockerfile'), str(ROOT)], timeout=600)
+        if not skip_build:
+            run(['docker', 'build', '--pull', '-t', SERVER_IMAGE, '-f',
+                 str(CLIENTS / 'Dockerfile'), str(ROOT)], timeout=600)
         run(['docker', 'run', '-d', '--name', SERVER, '--network', NETWORK,
              '--network-alias', 'ja4-server', '-v', f'{RESULTS}:/results', SERVER_IMAGE])
         server_started = True
@@ -115,7 +143,7 @@ def main():
             time.sleep(1)
         else:
             raise RuntimeError('Apache did not start listening within 30 seconds')
-        for key, language, image, api, command in CASES:
+        for key, language, image, api, command in cases:
             print(f'Collecting {language} using {image}', flush=True)
             succeeded, stdout = False, ''
             client_name = f'{SERVER}-{key}'
@@ -151,7 +179,24 @@ def main():
             subprocess.run(['docker', 'network', 'rm', NETWORK], stdout=subprocess.DEVNULL)
         (RESULTS / 'image-digests.json').write_text(json.dumps(digests, indent=2) + '\n')
         failed = report(rows, error)
-    return int(failed or len(rows) != len(CASES))
+    return int(failed or len(rows) != len(cases))
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--matrix', action='store_true', help='Print the GHA client matrix')
+    mode.add_argument('--client', choices=[case[0] for case in CASES])
+    mode.add_argument('--aggregate', type=Path, help='Combine downloaded client artifacts')
+    parser.add_argument('--skip-build', action='store_true', help='Use a loaded server image')
+    args = parser.parse_args()
+    if args.matrix:
+        print(json.dumps({'client': [case[0] for case in CASES]}))
+        return 0
+    if args.aggregate is not None:
+        return aggregate(args.aggregate)
+    cases = [case for case in CASES if args.client is None or case[0] == args.client]
+    return collect(cases, args.skip_build)
 
 
 if __name__ == '__main__':
