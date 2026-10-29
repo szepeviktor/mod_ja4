@@ -9,12 +9,11 @@ proxy connections.
 
 On a minimal Debian system, install the build dependencies and Apache. Run the
 package installation and module installation/configuration commands as root;
-compilation itself can run as an ordinary user. The examples use `rtk` as a CLI
-proxy; omit that prefix on servers where RTK is not installed.
+compilation itself can run as an ordinary user.
 
 ```sh
-rtk apt-get update
-rtk apt-get install --no-install-recommends apache2 apache2-dev build-essential libssl-dev libtool-bin binutils
+apt-get update
+apt-get install --no-install-recommends apache2 apache2-dev build-essential libssl-dev libtool-bin binutils
 ```
 
 `build-essential` supplies the compiler and `make`; `apache2-dev` supplies `apxs`
@@ -27,13 +26,13 @@ and [libssl-dev](https://packages.debian.org/stable/libssl-dev).
 From this repository's root directory, compile both C files into one module:
 
 ```sh
-rtk make APXS=/usr/bin/apxs
+make APXS=/usr/bin/apxs
 ```
 
 Alternatively, the equivalent direct build command is:
 
 ```sh
-rtk apxs -c -Wc,-Wall -Wc,-Wextra -Wc,-Werror mod_ja4.c ja4.c -lcrypto -lssl
+apxs -c -Wc,-Wall -Wc,-Wextra -Wc,-Werror mod_ja4.c ja4.c -lcrypto -lssl
 ```
 
 Build output: `.libs/mod_ja4.so` and its libtool descriptor `mod_ja4.la`.
@@ -43,9 +42,9 @@ Install the module under `/usr/local/`, following the same layout as
 [mod_444](https://github.com/szepeviktor/apache-httpd-module-444-drop/blob/master/README.md):
 
 ```sh
-rtk install -d -m 755 /usr/local/lib/apache2/modules
-rtk apxs -i -S LIBEXECDIR=/usr/local/lib/apache2/modules mod_ja4.la
-rtk strip --strip-unneeded /usr/local/lib/apache2/modules/mod_ja4.so
+install -d -m 755 /usr/local/lib/apache2/modules
+apxs -i -S LIBEXECDIR=/usr/local/lib/apache2/modules mod_ja4.la
+strip --strip-unneeded /usr/local/lib/apache2/modules/mod_ja4.so
 ```
 
 ## Load and configure
@@ -60,13 +59,13 @@ LoadModule ja4_module /usr/local/lib/apache2/modules/mod_ja4.so
 Then enable the modules, validate the configuration and reload Apache as root:
 
 ```sh
-rtk a2enmod ssl ja4
-rtk apache2ctl configtest
-rtk systemctl reload apache2
+a2enmod ssl ja4
+apache2ctl configtest
+systemctl reload apache2
 ```
 
 Run the reload only if the configuration check succeeds. If Apache is not
-running yet, use `rtk systemctl start apache2` instead of the reload.
+running yet, use `systemctl start apache2` instead of the reload.
 For other Apache layouts, add the `LoadModule` line to the server configuration
 after loading `mod_ssl`.
 
@@ -89,9 +88,6 @@ With PHP/CGI/FastCGI configured to forward the request environment:
 $ja4 = $_SERVER['JA4'] ?? null;
 ```
 
-`ja4.php` is the older, separate experiment using Apache ClientHello variables;
-it is not used by this module. The module computes the finished fingerprint in C.
-
 For diagnostics, with `mod_headers` enabled:
 
 ```apache
@@ -100,13 +96,7 @@ Header always set X-JA4 "%{JA4}e" env=JA4
 
 ## Design and compatibility
 
-The inspected Apache 2.5 source (`httpd/`, commit
-`425ec5ed32266c56d3e96ac2c1e79f315f312edc`) copies ClientHello fields in
-`ssl_engine_kernel.c:copy_clienthello_vars()` into a private `SSLConnRec` member.
-`ssl_engine_vars.c:ssl_var_lookup_ssl_clienthello()` later exposes hex buffers.
-That design needs a `mod_ssl` patch when backported directly to 2.4.
-
-This module instead registers the public optional `ssl/pre_handshake` hook and
+This module registers the public optional `ssl/pre_handshake` hook and
 uses `SSL_set_msg_callback()` on each incoming SSL connection. OpenSSL supplies
 complete handshake messages after fragment collection. The module parses the
 initial ClientHello, calculates JA4 once and stores only the resulting strings
@@ -141,8 +131,8 @@ do not change OpenSSL's decision to accept or reject the connection.
 ## Tests
 
 ```sh
-rtk make test
-rtk make integration
+make test
+make integration
 ```
 
 Parser tests check the published JA4 example, GREASE/permutation invariance,
