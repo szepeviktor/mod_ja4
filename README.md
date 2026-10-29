@@ -159,8 +159,12 @@ sources to trigger a run on a push or pull request. To run it locally with Docke
 python3 tests/client-fingerprints/run.py
 ```
 
-The clients only contact the local self-signed HTTPS fixture, with certificate
-verification disabled for that fixture. Package installation and image/dependency
+The clients only contact the local HTTPS fixture. Every client trusts
+the local test CA explicitly and verifies both the server certificate and the
+`ja4-server` hostname. The certificate includes a matching DNS subject alternative
+name. The public CA certificate is included in the artifact; private keys stay
+in the server container.
+Package installation and image/dependency
 downloads require internet access. Images select current versions within their
 tags; the workflow records the resolved image digests and does not force OpenSSL
 1.1.1. Results describe a particular runtime, HTTPS API and TLS configuration,

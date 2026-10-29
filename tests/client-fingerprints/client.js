@@ -1,9 +1,11 @@
 const https = require('node:https');
+const fs = require('node:fs');
 
 console.log(`Node.js ${process.version}; OpenSSL ${process.versions.openssl}`);
-// Only the local self-signed HTTPS fixture is contacted.
+// Only the local HTTPS fixture is contacted.
 const request = https.get('https://ja4-server/node.txt', {
-  rejectUnauthorized: false,
+  ca: fs.readFileSync('/fixture/ca.pem'),
+  rejectUnauthorized: true,
   timeout: 15000,
 }, (response) => {
   let body = '';

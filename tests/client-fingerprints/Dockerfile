@@ -14,8 +14,20 @@ RUN make \
     && a2enmod ssl ja4 \
     && a2dissite 000-default \
     && openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
+        -subj /CN=ja4-test-ca \
+        -addext 'basicConstraints=critical,CA:TRUE' \
+        -addext 'keyUsage=critical,keyCertSign,cRLSign' \
+        -keyout /etc/ssl/private/ja4-ca.key -out /etc/ssl/certs/ja4-ca.crt \
+    && openssl req -new -newkey rsa:2048 -nodes \
         -subj /CN=ja4-server \
-        -keyout /etc/ssl/private/ja4-test.key -out /etc/ssl/certs/ja4-test.crt \
+        -addext 'subjectAltName=DNS:ja4-server' \
+        -addext 'basicConstraints=critical,CA:FALSE' \
+        -addext 'keyUsage=critical,digitalSignature,keyEncipherment' \
+        -addext 'extendedKeyUsage=serverAuth' \
+        -keyout /etc/ssl/private/ja4-test.key -out /tmp/ja4-test.csr \
+    && openssl x509 -req -in /tmp/ja4-test.csr -days 1 \
+        -CA /etc/ssl/certs/ja4-ca.crt -CAkey /etc/ssl/private/ja4-ca.key \
+        -CAcreateserial -copy_extensions copy -out /etc/ssl/certs/ja4-test.crt \
     && mkdir -p /results \
     && for client in c cpp python php ruby node go rust; do \
         printf 'ok\n' > "/var/www/html/${client}.txt"; \

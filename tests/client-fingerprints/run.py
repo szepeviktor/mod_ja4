@@ -57,8 +57,9 @@ def report(rows, error=None):
     lines = [
         '# HTTPS client JA4 fingerprints', '',
         'Measured by a local Apache HTTPS server running this checkout of `mod_ja4`.',
-        'C and C++ are measured separately. Certificate verification is disabled only '
-        'for the local self-signed fixture. No external HTTPS target is contacted.', '',
+        'C and C++ are measured separately. All clients verify the server certificate '
+        'and hostname using the local test CA as a trust anchor. '
+        'No external HTTPS target is contacted.', '',
         '| Language | Official Docker image | HTTPS API | Runtime / TLS | JA4 | Result |',
         '| --- | --- | --- | --- | --- | --- |',
     ]
@@ -103,6 +104,8 @@ def main():
         run(['docker', 'run', '-d', '--name', SERVER, '--network', NETWORK,
              '--network-alias', 'ja4-server', '-v', f'{RESULTS}:/results', SERVER_IMAGE])
         server_started = True
+        run(['docker', 'cp', f'{SERVER}:/etc/ssl/certs/ja4-ca.crt',
+             str(RESULTS / 'ca.pem')])
         for _ in range(30):
             ready = subprocess.run(['docker', 'exec', SERVER, 'bash', '-c',
                                     'exec 3<>/dev/tcp/127.0.0.1/443'],
@@ -121,6 +124,7 @@ def main():
                      (RESULTS / f'{key}.stderr.txt').open('w') as err:
                     run(['docker', 'run', '--rm', '--name', client_name, '--network', NETWORK,
                          '-v', f'{CLIENTS}:/clients:ro', '-v', f'{RESULTS}:/results',
+                         '-v', f'{RESULTS / "ca.pem"}:/fixture/ca.pem:ro',
                          image, 'bash', '-euc', command], stdout=out, stderr=err, timeout=600)
                 succeeded = True
             except (subprocess.SubprocessError, OSError) as exc:

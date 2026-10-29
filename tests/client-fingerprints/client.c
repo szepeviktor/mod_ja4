@@ -11,11 +11,16 @@ int main(int argc, char **argv)
     char request[256], response[4096];
     int n, first = 1, ok = 0;
     if (!ctx || argc != 2) return 1;
-    SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL); /* Local self-signed fixture. */
+    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
+    if (SSL_CTX_load_verify_locations(ctx, "/fixture/ca.pem", NULL) != 1) {
+        SSL_CTX_free(ctx);
+        return 1;
+    }
     connection = BIO_new_ssl_connect(ctx);
     if (!connection) { SSL_CTX_free(ctx); return 1; }
     BIO_get_ssl(connection, &ssl);
-    SSL_set_tlsext_host_name(ssl, "ja4-server");
+    if (SSL_set_tlsext_host_name(ssl, "ja4-server") != 1 ||
+        SSL_set1_host(ssl, "ja4-server") != 1) goto done;
     BIO_set_conn_hostname(connection, "ja4-server:443");
     printf("%s; %s\n", __VERSION__, OpenSSL_version(OPENSSL_VERSION));
     if (BIO_do_connect(connection) <= 0 || BIO_do_handshake(connection) <= 0) goto done;
