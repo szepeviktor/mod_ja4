@@ -35,7 +35,16 @@ jobs:
             --env DEBIAN_VERSION \
             "docker.io/library/debian:${DEBIAN_VERSION}-slim" \
             bash -euc '
-              apt-get update
+              if [ "$DEBIAN_VERSION" = 11 ]; then
+                # Bullseye has moved out of the regular security mirrors.
+                printf "%s\n" \
+                  "deb http://archive.debian.org/debian bullseye main" \
+                  "deb http://archive.debian.org/debian-security bullseye-security main" \
+                  > /etc/apt/sources.list
+                apt-get -o Acquire::Check-Valid-Until=false update
+              else
+                apt-get update
+              fi
               apt-get install --no-install-recommends -y \
                 apache2-dev build-essential libssl-dev libtool-bin binutils python3
               make
