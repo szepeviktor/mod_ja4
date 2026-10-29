@@ -144,7 +144,7 @@ install it as `/usr/local/lib/apache2/modules/mod_ja4.so`.
 ### HTTPS client comparison
 
 The **HTTPS client fingerprints** workflow sends a request from official `gcc`,
-`python`, `php`, `ruby`, `node` and `rust` Docker images to a local dummy Apache
+`python`, `php`, `ruby`, `node`, `golang` and `rust` Docker images to a local dummy Apache
 HTTPS server running `mod_ja4`. C and C++ have separate requests. The selected
 HTTPS APIs and actual runtime/TLS versions appear alongside each JA4 in the
 workflow run's **Summary** tab, followed by the complete raw fingerprints.

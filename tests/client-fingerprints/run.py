@@ -30,6 +30,8 @@ CASES = [
      'ruby /clients/client.rb'),
     ('node', 'Node.js', 'node:22-bookworm', 'https',
      'node /clients/client.js'),
+    ('go', 'Go', 'golang:1-bookworm', 'net/http / crypto/tls',
+     'go run /clients/client.go'),
     ('rust', 'Rust', 'rust:1-bookworm', 'native-tls / OpenSSL',
      'apt-get update >&2; apt-get install -y --no-install-recommends pkg-config libssl-dev >&2; '
      'cp -R /clients/rust /tmp/rust; cd /tmp/rust; rustc --version; cargo run --quiet; '

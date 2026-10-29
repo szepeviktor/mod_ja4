@@ -17,7 +17,7 @@ RUN make \
         -subj /CN=ja4-server \
         -keyout /etc/ssl/private/ja4-test.key -out /etc/ssl/certs/ja4-test.crt \
     && mkdir -p /results \
-    && for client in c cpp python php ruby node rust; do \
+    && for client in c cpp python php ruby node go rust; do \
         printf 'ok\n' > "/var/www/html/${client}.txt"; \
     done
 
