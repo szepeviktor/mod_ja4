@@ -72,6 +72,13 @@ class MatrixReportTests(unittest.TestCase):
         self.assertFalse(missing['success'])
         self.assertEqual(missing['runtime'], 'Missing matrix result')
 
+    def test_missing_macos_capture_is_reported(self):
+        self.seed(missing='urlsession')
+        self.assertEqual(runner.aggregate(self.inputs), 1)
+        missing = next(row for row in self.records() if row['language'] == 'Swift / URLSession')
+        self.assertFalse(missing['success'])
+        self.assertEqual(missing['runtime'], 'Missing matrix result')
+
 
 if __name__ == '__main__':
     unittest.main()

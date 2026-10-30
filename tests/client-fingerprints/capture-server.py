@@ -1,4 +1,4 @@
-"""Loopback HTTPS fixture; save the initial ClientHello before TLS negotiation."""
+"""Native-client loopback HTTPS fixture; save the initial ClientHello."""
 from pathlib import Path
 import socket
 import ssl

@@ -119,16 +119,60 @@ jobs:
         with:
           name: https-windows-capture
           path: windows-capture
-      - run: python3 tests/client-fingerprints/parse-windows.py windows-capture
+      - run: python3 tests/client-fingerprints/parse-capture.py windows-capture
       - uses: actions/upload-artifact@v7
         with:
           name: https-client-powershell
           path: fingerprint-results/
           if-no-files-found: error
 
+  macos-capture:
+    name: Capture URLSession on macOS
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Measure native Swift URLSession HTTPS client
+        run: python3 tests/client-fingerprints/run-macos.py
+      - uses: actions/upload-artifact@v7
+        with:
+          name: https-macos-capture
+          path: |
+            macos-capture/clienthello.bin
+            macos-capture/metadata.json
+            macos-capture/request.txt
+            macos-capture/server.pem
+            macos-capture/ca.pem
+          if-no-files-found: error
+
+  urlsession:
+    name: Parse macOS URLSession fingerprint
+    needs: macos-capture
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v8
+        with:
+          name: https-macos-capture
+          path: macos-capture
+      - run: python3 tests/client-fingerprints/parse-capture.py macos-capture
+      - uses: actions/upload-artifact@v7
+        with:
+          name: https-client-urlsession
+          path: fingerprint-results/
+          if-no-files-found: error
+
   report:
     name: Combine client reports
-    needs: [build-server, fingerprints, powershell]
+    needs: [build-server, fingerprints, powershell, urlsession]
     if: ${{ always() && needs.build-server.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5

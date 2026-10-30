@@ -17,7 +17,7 @@ $store.Open('ReadWrite')
 $store.Add($certificate)
 $server = $null
 try {
-    $server = Start-Process python3 -ArgumentList @('tests/client-fingerprints/windows-server.py', $directory) -PassThru -NoNewWindow
+    $server = Start-Process python3 -ArgumentList @('tests/client-fingerprints/capture-server.py', $directory) -PassThru -NoNewWindow
     for ($i = 0; $i -lt 100; $i++) {
         if (Test-Path (Join-Path $directory 'ready')) { break }
         if ($server.HasExited) { throw 'HTTPS fixture exited before listening' }

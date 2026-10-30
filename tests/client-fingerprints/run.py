@@ -41,7 +41,9 @@ CASES = [
 
 WINDOWS_CASE = ('powershell', 'PowerShell', 'windows-2025',
                 'Invoke-WebRequest / .NET / Schannel', '')
-REPORT_CASES = [*CASES, WINDOWS_CASE]
+MACOS_CASE = ('urlsession', 'Swift / URLSession', 'macos-15',
+              'Foundation URLSession / Apple TLS', '')
+REPORT_CASES = [*CASES, WINDOWS_CASE, MACOS_CASE]
 
 
 def run(args, **kwargs):
@@ -75,7 +77,7 @@ def write_report(records, error=None):
     lines = [
         '# HTTPS client JA4 fingerprints', '',
         'Linux clients are measured by Apache running this checkout of `mod_ja4`. '
-        'Windows PowerShell uses a loopback HTTPS fixture; its captured ClientHello '
+        'Windows PowerShell and macOS URLSession use a loopback HTTPS fixture; each captured ClientHello '
         'is parsed by the same ja4.c implementation.',
         'C and C++ are measured separately. All clients verify the server certificate '
         'and hostname using the local test CA as a trust anchor. '

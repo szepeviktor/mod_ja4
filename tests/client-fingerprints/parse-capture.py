@@ -1,4 +1,4 @@
-"""Parse the Windows capture using the module's C implementation on Linux."""
+"""Parse a native-client capture using the module's C implementation on Linux."""
 import ctypes
 import json
 from pathlib import Path
@@ -28,7 +28,7 @@ with tempfile.TemporaryDirectory() as temporary:
     data = (directory / 'clienthello.bin').read_bytes()
     result = Result()
     if not parser.ja4_compute(data, len(data), ctypes.byref(result)):
-        raise RuntimeError('Invalid Windows ClientHello')
+        raise RuntimeError('Invalid captured ClientHello')
     try:
         record = json.loads((directory / 'metadata.json').read_text(encoding='utf-8-sig'))
         record.update(ja4=result.fingerprint.decode(), ja4_raw=ctypes.string_at(result.raw).decode())
