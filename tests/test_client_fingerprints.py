@@ -25,7 +25,7 @@ class MatrixReportTests(unittest.TestCase):
         self.addCleanup(replacement.stop)
 
     def seed(self, failed=None, missing=None):
-        for key, language, image, api, _ in runner.CASES:
+        for key, language, image, api, _ in runner.REPORT_CASES:
             if key == missing:
                 continue
             directory = self.inputs / f'https-client-{key}'
@@ -43,8 +43,8 @@ class MatrixReportTests(unittest.TestCase):
         self.seed()
         self.assertEqual(runner.aggregate(self.inputs), 0)
         self.assertEqual([row['language'] for row in self.records()],
-                         [case[1] for case in runner.CASES])
-        for key, *_ in runner.CASES:
+                         [case[1] for case in runner.REPORT_CASES])
+        for key, *_ in runner.REPORT_CASES:
             self.assertEqual((self.output / 'clients' / key / 'requests.tsv').read_text(),
                              (self.inputs / f'https-client-{key}' / 'requests.tsv').read_text())
         self.assertIn('raw fixture', (self.output / 'summary.md').read_text())
@@ -52,18 +52,32 @@ class MatrixReportTests(unittest.TestCase):
     def test_failed_client_makes_combined_report_fail(self):
         self.seed(failed='rust')
         self.assertEqual(runner.aggregate(self.inputs), 1)
-        self.assertEqual(sum(row['success'] for row in self.records()), 7)
+        self.assertEqual(sum(row['success'] for row in self.records()), len(runner.REPORT_CASES) - 1)
         self.assertIn('FAILED', (self.output / 'summary.md').read_text())
 
     def test_missing_client_is_reported_without_losing_other_results(self):
         self.seed(missing='go')
         self.assertEqual(runner.aggregate(self.inputs), 1)
         rows = self.records()
-        self.assertEqual(len(rows), 8)
+        self.assertEqual(len(rows), len(runner.REPORT_CASES))
         missing = next(row for row in rows if row['language'] == 'Go')
         self.assertFalse(missing['success'])
         self.assertEqual(missing['runtime'], 'Missing matrix result')
-        self.assertEqual(sum(row['success'] for row in rows), 7)
+        self.assertEqual(sum(row['success'] for row in rows), len(runner.REPORT_CASES) - 1)
+
+    def test_missing_windows_capture_is_reported(self):
+        self.seed(missing='powershell')
+        self.assertEqual(runner.aggregate(self.inputs), 1)
+        missing = next(row for row in self.records() if row['language'] == 'PowerShell')
+        self.assertFalse(missing['success'])
+        self.assertEqual(missing['runtime'], 'Missing matrix result')
+
+    def test_missing_macos_capture_is_reported(self):
+        self.seed(missing='urlsession')
+        self.assertEqual(runner.aggregate(self.inputs), 1)
+        missing = next(row for row in self.records() if row['language'] == 'Swift / URLSession')
+        self.assertFalse(missing['success'])
+        self.assertEqual(missing['runtime'], 'Missing matrix result')
 
 
 if __name__ == '__main__':
