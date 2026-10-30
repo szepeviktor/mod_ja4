@@ -39,6 +39,10 @@ CASES = [
      'cp Cargo.lock /results/rust-Cargo.lock'),
 ]
 
+WINDOWS_CASE = ('powershell', 'PowerShell', 'windows-2025',
+                'Invoke-WebRequest / .NET / Schannel', '')
+REPORT_CASES = [*CASES, WINDOWS_CASE]
+
 
 def run(args, **kwargs):
     return subprocess.run(args, check=True, text=True, **kwargs)
@@ -70,11 +74,13 @@ def report(rows, error=None):
 def write_report(records, error=None):
     lines = [
         '# HTTPS client JA4 fingerprints', '',
-        'Measured by a local Apache HTTPS server running this checkout of `mod_ja4`.',
+        'Linux clients are measured by Apache running this checkout of `mod_ja4`. '
+        'Windows PowerShell uses a loopback HTTPS fixture; its captured ClientHello '
+        'is parsed by the same ja4.c implementation.',
         'C and C++ are measured separately. All clients verify the server certificate '
         'and hostname using the local test CA as a trust anchor. '
         'No external HTTPS target is contacted.', '',
-        '| Language | Official Docker image | HTTPS API | Runtime / TLS | JA4 | Result |',
+        '| Language | Docker image / runner | HTTPS API | Runtime / TLS | JA4 | Result |',
         '| --- | --- | --- | --- | --- | --- |',
     ]
     for record in records:
@@ -101,7 +107,7 @@ def write_report(records, error=None):
 def aggregate(source):
     RESULTS.mkdir(exist_ok=True)
     records = []
-    for key, language, image, api, _ in CASES:
+    for key, language, image, api, _ in REPORT_CASES:
         directory = source / f'https-client-{key}'
         result = directory / 'results.json'
         if result.exists():

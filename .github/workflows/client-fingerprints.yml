@@ -82,9 +82,53 @@ jobs:
           path: fingerprint-results/
           if-no-files-found: warn
 
+  windows-capture:
+    name: Capture PowerShell on Windows
+    runs-on: windows-2025
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Measure native Windows PowerShell HTTPS client
+        shell: pwsh
+        run: ./tests/client-fingerprints/client.ps1
+      - uses: actions/upload-artifact@v7
+        with:
+          name: https-windows-capture
+          path: |
+            windows-capture/clienthello.bin
+            windows-capture/metadata.json
+            windows-capture/request.txt
+            windows-capture/server.pem
+          if-no-files-found: error
+
+  powershell:
+    name: Parse Windows PowerShell fingerprint
+    needs: windows-capture
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v8
+        with:
+          name: https-windows-capture
+          path: windows-capture
+      - run: python3 tests/client-fingerprints/parse-windows.py windows-capture
+      - uses: actions/upload-artifact@v7
+        with:
+          name: https-client-powershell
+          path: fingerprint-results/
+          if-no-files-found: error
+
   report:
     name: Combine client reports
-    needs: [build-server, fingerprints]
+    needs: [build-server, fingerprints, powershell]
     if: ${{ always() && needs.build-server.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
