@@ -12,7 +12,7 @@ $request.CertificateExtensions.Add([System.Security.Cryptography.X509Certificate
 $certificate = $request.CreateSelfSigned([DateTimeOffset]::UtcNow.AddMinutes(-5), [DateTimeOffset]::UtcNow.AddDays(1))
 [IO.File]::WriteAllText((Join-Path $directory 'server.pem'), $certificate.ExportCertificatePem())
 [IO.File]::WriteAllText((Join-Path $directory 'server-key.pem'), $rsa.ExportPkcs8PrivateKeyPem())
-$store = [System.Security.Cryptography.X509Certificates.X509Store]::new('Root', 'CurrentUser')
+$store = [System.Security.Cryptography.X509Certificates.X509Store]::new('Root', 'LocalMachine')
 $store.Open('ReadWrite')
 $store.Add($certificate)
 $server = $null
@@ -26,7 +26,7 @@ try {
     if (!(Test-Path (Join-Path $directory 'ready'))) { throw 'HTTPS fixture did not start' }
     $response = Invoke-WebRequest -Uri 'https://localhost:8443/powershell.txt' -NoProxy -TimeoutSec 30
     if ($response.StatusCode -ne 200 -or $response.Content -ne "ok`n") { throw 'Unexpected HTTPS response' }
-    $server.WaitForExit()
+    if (!$server.WaitForExit(10000)) { throw 'HTTPS fixture did not exit after the response' }
     if ($server.ExitCode -ne 0) { throw 'HTTPS fixture failed' }
     @{
         language = 'PowerShell'; image = 'windows-2025'; api = 'Invoke-WebRequest / .NET / Schannel'
