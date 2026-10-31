@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Manual JA4 entries decoded from YAML",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "ja4", "label", "verification", "notes"],
+    "additionalProperties": false,
+    "properties": {
+      "id": {"type": "string", "minLength": 1},
+      "ja4": {"type": "string", "pattern": "^[tqd]([0-9]{2}|s[123])[di][0-9]{4}[a-zA-Z0-9]{2}_[0-9a-f]{12}_[0-9a-f]{12}$"},
+      "raw": {"type": ["string", "null"]},
+      "family": {"type": ["string", "null"], "minLength": 1},
+      "label": {"type": "string", "minLength": 1},
+      "verification": {"enum": ["unverified", "corroborated", "verified"]},
+      "notes": {"type": "string", "minLength": 1},
+      "evidence": {"type": "array", "items": {"type": "string"}}
+    }
+  }
+}
