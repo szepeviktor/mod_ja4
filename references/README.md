@@ -39,7 +39,7 @@ Use `unverified` for an unsupported identification, `corroborated` for a source-
 
 The `raw` field accepts the complete sorted JA4_RAW with separate cipher, extension and ordered signature lists, or `null` when unavailable, and the builder checks its recomputed JA4 against `ja4` without reconstructing RAW from a hash.
 
-The current manual entries document measured Go 1.27.3 and Rust/native-tls/OpenSSL profiles plus a FoXIO Python association whose identification as Requests remains unverified, with precise earlier-session evidence recorded in the YAML.
+The current manual entries document measured Go and Rust/native-tls/OpenSSL profiles, a FoXIO Python association with unverified Requests attribution, and an observed browser-impersonating crawler whose profile differs from the controlled PHP cURL measurement, with supporting evidence recorded in the YAML.
 
 External sources and generated files have no retained history or backups, while Git intentionally retains the edit history of the manually curated YAML.
 
