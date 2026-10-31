@@ -28,6 +28,10 @@ CASES = [
      'python3 /clients/client.py'),
     ('php', 'PHP', 'php:8.4-cli-bookworm', 'HTTPS stream wrapper',
      'php /clients/client.php'),
+    ('php-curl', 'PHP / cURL', 'php:8.4-cli-bookworm', 'ext-curl / libcurl',
+     'if ! php --ri curl >/dev/null 2>&1; then '
+     'apt-get update >&2; apt-get install -y --no-install-recommends libcurl4-openssl-dev >&2; '
+     'docker-php-ext-install curl >&2; fi; php /clients/client-curl.php'),
     ('ruby', 'Ruby', 'ruby:3.4-bookworm', 'Net::HTTP / OpenSSL',
      'ruby /clients/client.rb'),
     ('node', 'Node.js', 'node:22-bookworm', 'https',

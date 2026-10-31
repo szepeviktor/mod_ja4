@@ -55,6 +55,15 @@ class MatrixReportTests(unittest.TestCase):
         self.assertEqual(sum(row['success'] for row in self.records()), len(runner.REPORT_CASES) - 1)
         self.assertIn('FAILED', (self.output / 'summary.md').read_text())
 
+    def test_curl_failure_preserves_php_stream_result(self):
+        self.seed(failed='php-curl')
+        self.assertEqual(runner.aggregate(self.inputs), 1)
+        rows = {row['language']: row for row in self.records()}
+        self.assertTrue(rows['PHP']['success'])
+        self.assertFalse(rows['PHP / cURL']['success'])
+        self.assertEqual(rows['PHP']['api'], 'HTTPS stream wrapper')
+        self.assertEqual(rows['PHP / cURL']['api'], 'ext-curl / libcurl')
+
     def test_missing_client_is_reported_without_losing_other_results(self):
         self.seed(missing='go')
         self.assertEqual(runner.aggregate(self.inputs), 1)

@@ -29,7 +29,7 @@ RUN make \
         -CA /etc/ssl/certs/ja4-ca.crt -CAkey /etc/ssl/private/ja4-ca.key \
         -CAcreateserial -copy_extensions copy -out /etc/ssl/certs/ja4-test.crt \
     && mkdir -p /results \
-    && for client in c cpp python php ruby node go rust; do \
+    && for client in c cpp python php php-curl ruby node go rust; do \
         printf 'ok\n' > "/var/www/html/${client}.txt"; \
     done
 

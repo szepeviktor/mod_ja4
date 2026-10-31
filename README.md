@@ -243,6 +243,7 @@ logs, using a shared server image built once per workflow run. A final job combi
 their results, including failed or missing measurements, into one report. The
 HTTPS APIs and actual runtime/TLS versions appear alongside each JA4 in the
 workflow run's **Summary** tab, followed by the complete raw fingerprints.
+PHP's HTTPS stream wrapper and cURL extension are measured separately, with the cURL client recording its libcurl version and TLS backend while retaining default TLS and ALPN settings.
 The Markdown report, JSON data, image digests and logs are also uploaded as an
 Actions artifact. Rust uses reqwest 0.13 with its default rustls TLS backend;
 the resolved dependency versions are included in the Rust lockfile artifact.
@@ -255,7 +256,7 @@ python3 tests/client-fingerprints/run.py
 ```
 
 To measure a single client locally, add `--client rust` (or `c`, `cpp`, `python`,
-`php`, `ruby`, `node`, `go`). Individual CI artifacts are named `https-client-<client>`;
+`php`, `php-curl`, `ruby`, `node`, `go`). Individual CI artifacts are named `https-client-<client>`;
 the combined `https-client-fingerprints` artifact keeps each client's logs,
 certificate and image digests under `clients/<client>/`.
 

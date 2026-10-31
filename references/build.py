@@ -57,7 +57,7 @@ def build(root):
                 add(row['ja4'], None, 'foxio', row,
                     label=row.get('Application') or row.get('Library') or None)
 
-    families = {'C': 'c-cpp-openssl', 'C++': 'c-cpp-openssl', 'Node.js': 'nodejs',
+    families = {'C': 'c-cpp-openssl', 'C++': 'c-cpp-openssl', 'Node.js': 'nodejs', 'PHP / cURL': 'php',
                 'Swift / URLSession': 'swift-urlsession'}
     workflow = json.loads((sources / 'workflow/results.json').read_text())
     if not isinstance(workflow, list):

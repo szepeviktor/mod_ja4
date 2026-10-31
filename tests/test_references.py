@@ -57,6 +57,15 @@ class ReferencesTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Duplicate'):
             builder.build(self.root)
 
+    def test_php_apis_share_family_without_losing_labels(self):
+        self.write('sources/workflow/results.json', json.dumps([
+            dict(success=True, language=label, ja4=JA4, ja4_raw=RAW)
+            for label in ('PHP', 'PHP / cURL')]))
+        catalog, classifier = builder.build(self.root)
+        self.assertFalse(catalog[0]['conflict'])
+        self.assertEqual({row['family'] for row in classifier}, {'php'})
+        self.assertEqual({row['label'] for row in classifier}, {'PHP', 'PHP / cURL'})
+
     def test_mismatch_removes_stale_exports(self):
         self.write('sources/manual.yaml', yaml.safe_dump([
             dict(id='bad', ja4=JA4, raw=RAW.replace('0403', '0503'),
