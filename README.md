@@ -141,7 +141,99 @@ install it as `/usr/local/lib/apache2/modules/mod_ja4.so`.
 
 ## Tests
 
+### PHP fingerprint distance
+
+#### Client family classifier
+
+`examples/Ja4Classifier.php` matches a JA4_RAW against configurable, labeled RAW
+references, keeping the closest reference per family. Supply browser and
+non-browser profiles together to detect competition between families:
+
+```php
+require_once __DIR__ . '/examples/Ja4Classifier.php';
+
+$references = json_decode(
+    file_get_contents(__DIR__ . '/references/generated/classifier-references.json'),
+    true,
+    flags: JSON_THROW_ON_ERROR,
+);
+$classifier = new Ja4Classifier($references, maxDistance: 0.10, ambiguityMargin: 0.02);
+$result = $classifier->classify($_SERVER['JA4_RAW']);
+```
+
+The result contains `match` (`exact`, `close`, `ambiguous`, `unknown`), `family`,
+nearest `distance`, the gap to the next family (`margin`), `differences`, and
+ranked `candidates`. `family` is null for ambiguous/unknown inputs. Differences
+list cipher/extension/signature additions and removals relative to the reference;
+changed signature sequences are also included to expose ordering changes.
+Exact means equality under the RAW metric (cipher/extension ordering is ignored).
+A unique exact family wins; identical profiles shared by families are ambiguous.
+For nonzero distances within the threshold, a gap at or below the ambiguity
+margin produces an ambiguous result, even if the runner-up is above the threshold.
+
+Both default thresholds are **experimental**, not calibrated detection guarantees.
+RAW weights are 30% ciphers, 30% extensions, 35% signature algorithms and 5%
+metadata. These replace the initial equal weights; earlier RAW scores and their
+interpretations are not directly comparable. The default distance/ambiguity
+thresholds remain provisional and require calibration with labeled captures.
+Build the current references with `rtk python3 references/build.py`; [references/README.md](references/README.md) describes each source and generated file.
+Only successful workflow measurements and verified manual entries with RAW and a family enter the classifier export.
+Reference coverage depends on the current sources, and a nearest candidate does not prove client identity or benign traffic.
+
+```sh
+php8.5 tests/test_ja4_classifier.php
+```
+
+`examples/Ja4Distance.php` compares two hashed JA4 TLS fingerprints with a heuristic
+distance between 0 (identical) and 1 (maximum difference):
+
+```php
+require_once __DIR__ . '/examples/Ja4Distance.php';
+
+$distance = Ja4Distance::distance(
+    't13d1516h2_8daaf6152771_b186095e22b6',
+    't13d1516h2_8daaf6152771_000000000000',
+); // 0.125
+```
+
+The eight features have equal weight: transport, TLS version, SNI, cipher count,
+extension count, ALPN, cipher hash and extension/signature hash. Count differences
+are divided by 99; each other feature contributes 0 for equality or 1 for
+inequality, and the sum is divided by 8. Hashes are compared as whole values,
+because Levenshtein distance between hash characters cannot measure similarity
+of the underlying TLS lists. Count saturation at 99 also limits what can be
+inferred. The score is not a probability or a standardized JA4 distance.
+
+Inputs must follow the hashed JA4 format (including lowercase hashes); malformed
+inputs throw `InvalidArgumentException`. ALPN comparison is case-sensitive.
+JA4_RAW and other JA4+ fingerprint types are not accepted.
+
+```sh
+php8.5 tests/test_ja4_distance.php
+```
+
 ### HTTPS client comparison
+
+For experimental nearest-reference matching from a request log containing
+`@@ja4` and `@@ja4_raw` lines:
+
+```sh
+php8.5 tests/compare_raw_clients.php /path/to/request.log
+php8.5 tests/test_ja4_raw_distance.php
+```
+
+This uses `examples/Ja4RawDistance.php` and the RAW fixtures in
+`references/generated/classifier-references.json`. Components are weighted: cipher-set Jaccard
+distance 30%, extension-set Jaccard distance 30%, normalized token Levenshtein
+distance of the ordered signature algorithms 35%, and the fraction of differing
+transport/version/SNI/ALPN fields 5%. Each metadata field has equal weight within
+that 5%. Counts are not scored separately. Inputs must
+already be JA4_RAW lists with GREASE and SNI/ALPN extensions filtered as specified.
+The score is experimental, not a language probability; hashed-distance thresholds
+do not apply. The report always shows nearest references, including poor matches.
+Reference coverage is limited: browser fixtures and many HTTP/TLS stacks are
+absent. Identical C/C++ fixtures are grouped; nearby OpenSSL clients can remain
+ambiguous. CSV labels cannot supply RAW data or validate this classifier.
 
 The **HTTPS client fingerprints** workflow sends a request from official `gcc`,
 `python`, `php`, `ruby`, `node`, `golang` and `rust` Docker images to a local dummy Apache

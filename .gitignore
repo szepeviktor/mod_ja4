@@ -8,3 +8,9 @@ __pycache__/
 /ja4.php
 /mod_ssl_tls_fingerprint_rtt.patch
 /fingerprint-results/
+/https-client-reference-captures/
+/references/sources/foxio/mapping.csv
+/references/sources/workflow/results.json
+/references/sources/live-traffic/debug-request-headers.log
+/references/generated/catalog.json
+/references/generated/classifier-references.json

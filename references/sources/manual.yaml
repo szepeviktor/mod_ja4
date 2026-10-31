@@ -1,0 +1,38 @@
+# Entries follow ../schema.json; only verified entries with RAW enter the classifier.
+- id: go-1.27.3-net-http
+  ja4: t13d1312h2_f57a46bbacb6_f50d94e863eb
+  raw: t13d1312h2_1301,1302,1303,c009,c00a,c013,c014,c02b,c02c,c02f,c030,cca8,cca9_0005,000a,000b,000d,0012,0017,002b,0032,0033,ff01_0904,0905,0906,0804,0403,0807,0805,0806,0401,0501,0601,0503,0603
+  family: go
+  label: Go 1.27.3 / net/http / crypto/tls
+  verification: verified
+  notes: Measured with golang:1-bookworm in the controlled HTTPS client workflow; identifies a matching TLS configuration
+    rather than proving the language of an unknown client.
+  evidence:
+  - https://github.com/szepeviktor/mod_ja4/actions/runs/40898726123
+  - Codex session rollout-2026-10-29T14-59-35-01a1882c-6e5b-7f42-bf1d-b0f27fdc2b7e.jsonl, line 226
+- id: python-requests-associated-openssl
+  ja4: t13d4312h1_c7886603b240_b26ce05bbdd6
+  raw: null
+  family: python
+  label: OpenSSL-like profile associated with Python Requests
+  verification: corroborated
+  notes: Exact Python-labeled match in the FoXIO CSV, confirmed in the earlier session; association with Requests
+    was discussed but not established by a controlled Requests measurement.
+  evidence:
+  - https://github.com/FoxIO-LLC/ja4/blob/main/ja4plus-mapping.csv
+  - Codex session rollout-2026-10-30T17-20-49-01a18c96-0bc5-75e3-8b94-f642ba3f3000_01a18dd4-18b8-75f0-883c-d1a3199cc019.jsonl,
+    line 300
+  - Codex session rollout-2026-10-30T19-15-12-01a18c96-0bc5-75e3-8b94-f642ba3f3000_01a18e3c-d100-77c0-b336-65bfd7391941.jsonl,
+    line 49
+- id: rust-native-tls-openssl
+  ja4: t13d311100_e8f1e7e78f70_d41ae481755e
+  raw: t13d311100_002f,0033,0035,0039,003c,003d,0067,006b,009c,009d,009e,009f,00ff,1301,1302,1303,c009,c00a,c013,c014,c023,c024,c027,c028,c02b,c02c,c02f,c030,cca8,cca9,ccaa_000a,000b,000d,0015,0016,0017,0023,002b,002d,0033_0403,0503,0603,0807,0808,0809,080a,080b,0804,0805,0806,0401,0501,0601,0303,0301,0302,0402,0502,0602
+  family: rust
+  label: Rust / native-tls 0.2 / OpenSSL 3.0.22
+  verification: verified
+  notes: The earlier session read the measured Rust reference and confirmed that all 42 matching log entries had
+    identical RAW values; this reference uses native-tls/OpenSSL, whereas the current workflow uses reqwest/rustls,
+    and the match alone does not prove Rust.
+  evidence:
+  - Codex session rollout-2026-10-29T16-38-00-01a18886-87be-7081-b2f5-105c702b3e83.jsonl, line 122
+  - Codex session rollout-2026-10-29T16-38-00-01a18886-87be-7081-b2f5-105c702b3e83.jsonl, line 132
