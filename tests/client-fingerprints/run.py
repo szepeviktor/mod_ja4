@@ -18,12 +18,9 @@ SERVER_IMAGE = 'mod-ja4-fingerprint-server:local'
 # Runtime/base versions are explicit. Digests and actual TLS versions are saved.
 # These measure the chosen HTTPS API, not an intrinsic property of a language.
 CASES = [
-    ('c', 'C', 'gcc:14-bookworm', 'OpenSSL BIO',
+    ('c', 'C / C++ / OpenSSL', 'gcc:14-bookworm', 'OpenSSL BIO',
      'apt-get update >&2; apt-get install -y --no-install-recommends libssl-dev >&2; '
      'gcc -Wall -Wextra -Werror /clients/client.c -lssl -lcrypto -o /tmp/client; /tmp/client c'),
-    ('cpp', 'C++', 'gcc:14-bookworm', 'OpenSSL BIO',
-     'apt-get update >&2; apt-get install -y --no-install-recommends libssl-dev >&2; '
-     'g++ -Wall -Wextra -Werror /clients/client.c -lssl -lcrypto -o /tmp/client; /tmp/client cpp'),
     ('python', 'Python', 'python:3.13-bookworm', 'urllib.request / ssl',
      'python3 /clients/client.py'),
     ('php', 'PHP', 'php:8.4-cli-bookworm', 'HTTPS stream wrapper',
@@ -32,6 +29,9 @@ CASES = [
      'if ! php --ri curl >/dev/null 2>&1; then '
      'apt-get update >&2; apt-get install -y --no-install-recommends libcurl4-openssl-dev >&2; '
      'docker-php-ext-install curl >&2; fi; php /clients/client-curl.php'),
+    ('perl', 'Perl', 'perl:5.44-bookworm', 'LWP::UserAgent / IO::Socket::SSL / OpenSSL',
+     'cpanm --notest --mirror https://cpan.metacpan.org --mirror-only LWP::Protocol::https >&2; '
+     'perl /clients/client.pl'),
     ('ruby', 'Ruby', 'ruby:3.4-bookworm', 'Net::HTTP / OpenSSL',
      'ruby /clients/client.rb'),
     ('node', 'Node.js', 'node:22-bookworm', 'https',
@@ -83,7 +83,7 @@ def write_report(records, error=None):
         'Linux clients are measured by Apache running this checkout of `mod_ja4`. '
         'Windows PowerShell and macOS URLSession use a loopback HTTPS fixture; each captured ClientHello '
         'is parsed by the same ja4.c implementation.',
-        'C and C++ are measured separately. All clients verify the server certificate '
+        'The C OpenSSL measurement represents the shared C/C++ reference. All clients verify the server certificate '
         'and hostname using the local test CA as a trust anchor. '
         'No external HTTPS target is contacted.', '',
         '| Language | Docker image / runner | HTTPS API | Runtime / TLS | JA4 | Result |',

@@ -232,18 +232,19 @@ already be JA4_RAW lists with GREASE and SNI/ALPN extensions filtered as specifi
 The score is experimental, not a language probability; hashed-distance thresholds
 do not apply. The report always shows nearest references, including poor matches.
 Reference coverage is limited: browser fixtures and many HTTP/TLS stacks are
-absent. Identical C/C++ fixtures are grouped; nearby OpenSSL clients can remain
+absent. C and C++ share one OpenSSL reference measured with C; nearby OpenSSL clients can remain
 ambiguous. CSV labels cannot supply RAW data or validate this classifier.
 
 The **HTTPS client fingerprints** workflow sends a request from official `gcc`,
-`python`, `php`, `ruby`, `node`, `golang` and `rust` Docker images to a local dummy Apache
-HTTPS server running `mod_ja4`. C and C++ have separate requests. The selected
+`python`, `php`, `perl`, `ruby`, `node`, `golang` and `rust` Docker images to a local dummy Apache
+HTTPS server running `mod_ja4`. The C measurement provides the shared C/C++ OpenSSL reference. The selected
 clients run in parallel GitHub Actions matrix jobs with independent status and
 logs, using a shared server image built once per workflow run. A final job combines
 their results, including failed or missing measurements, into one report. The
 HTTPS APIs and actual runtime/TLS versions appear alongside each JA4 in the
 workflow run's **Summary** tab, followed by the complete raw fingerprints.
 PHP's HTTPS stream wrapper and cURL extension are measured separately, with the cURL client recording its libcurl version and TLS backend while retaining default TLS and ALPN settings.
+Perl uses LWP::UserAgent with IO::Socket::SSL and records the Perl, HTTP-library, SSL-module and OpenSSL versions.
 The Markdown report, JSON data, image digests and logs are also uploaded as an
 Actions artifact. Rust uses reqwest 0.13 with its default rustls TLS backend;
 the resolved dependency versions are included in the Rust lockfile artifact.
@@ -255,8 +256,8 @@ sources to trigger a run on a push or pull request. To run it locally with Docke
 python3 tests/client-fingerprints/run.py
 ```
 
-To measure a single client locally, add `--client rust` (or `c`, `cpp`, `python`,
-`php`, `php-curl`, `ruby`, `node`, `go`). Individual CI artifacts are named `https-client-<client>`;
+To measure a single client locally, add `--client rust` (or `c`, `python`,
+`php`, `php-curl`, `perl`, `ruby`, `node`, `go`). Individual CI artifacts are named `https-client-<client>`;
 the combined `https-client-fingerprints` artifact keeps each client's logs,
 certificate and image digests under `clients/<client>/`.
 

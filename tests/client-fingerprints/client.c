@@ -1,4 +1,4 @@
-/* Compiled as both C and C++. Only the local test server is contacted. */
+/* Shared C/C++ OpenSSL reference, compiled as C; only the local test server is contacted. */
 #include <openssl/ssl.h>
 #include <stdio.h>
 #include <string.h>
