@@ -1,15 +1,4 @@
 # Entries follow ../schema.json; only verified entries with RAW enter the classifier.
-- id: go-1.27.3-net-http
-  ja4: t13d1312h2_f57a46bbacb6_f50d94e863eb
-  raw: t13d1312h2_1301,1302,1303,c009,c00a,c013,c014,c02b,c02c,c02f,c030,cca8,cca9_0005,000a,000b,000d,0012,0017,002b,0032,0033,ff01_0904,0905,0906,0804,0403,0807,0805,0806,0401,0501,0601,0503,0603
-  family: go
-  label: Go 1.27.3 / net/http / crypto/tls
-  verification: verified
-  notes: Measured with golang:1-bookworm in the controlled HTTPS client workflow; identifies a matching TLS configuration
-    rather than proving the language of an unknown client.
-  evidence:
-  - https://github.com/szepeviktor/mod_ja4/actions/runs/40898726123
-  - Codex session rollout-2026-10-29T14-59-35-01a1882c-6e5b-7f42-bf1d-b0f27fdc2b7e.jsonl, line 226
 - id: python-requests-associated-openssl
   ja4: t13d4312h1_c7886603b240_b26ce05bbdd6
   raw: null
@@ -54,3 +43,61 @@
   - references/sources/live-traffic/debug-request-headers.log:68388
   - references/sources/live-traffic/debug-request-headers.log:69457
   - references/sources/workflow/results.json
+- id: zh-browser-impersonating-content-crawler
+  ja4: t13d131100_f57a46bbacb6_e5728521abd4
+  raw: t13d131100_1301,1302,1303,c009,c00a,c013,c014,c02b,c02c,c02f,c030,cca8,cca9_0005,000a,000b,000d,0012,0017,002b,0032,0033,ff01_0804,0403,0807,0805,0806,0401,0501,0601,0503,0603,0201,0203
+  family: null
+  label: Browser-impersonating content crawler with Chinese-language headers
+  verification: corroborated
+  notes: 'Observed 87 GET requests from 79 IPs between 2026-10-31 04:05:50 and 2026-11-02 22:07:15 UTC
+    in the artmedic log, all using HTTP/1.1, Accept-Encoding: gzip only, and identical JA4_RAW.
+    The Chinese-language subgroup comprises 77 requests with Accept-Language: zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7,
+    the same iPhone Safari User-Agent, a Chromium-like Accept header and Connection: keep-alive, close.
+    The other 10 requests share this TLS profile but use Accept-Language: en-US, Connection: close and
+    Windows Firefox, Xiaomi or Android Firefox User-Agents; Chinese-language headers are not universal to this JA4.
+    Targets include the homepage, content pages, WordPress oEmbed and REST page endpoints, embed pages and feed.
+    These observations support automated content crawling, without establishing a programming language,
+    common operator, nationality or successful content retrieval.'
+  evidence:
+  - references/sources/live-traffic/artmedic-debug-request-headers.log
+  - references/artmedic-ja4-requests.md
+- id: bot-impersonating-git-scanner
+  ja4: t13d131000_f57a46bbacb6_e7c285222651
+  raw: t13d131000_1301,1302,1303,c009,c00a,c013,c014,c02b,c02c,c02f,c030,cca8,cca9_0005,000a,000b,000d,0012,0017,002b,0033,ff01_0804,0403,0807,0805,0806,0401,0501,0601,0503,0603,0201,0203
+  family: null
+  label: Go-like Git scanner rotating crawler User-Agents
+  verification: corroborated
+  notes: 'Observed five requests from 45.45.237.97 on 2026-10-31 between 06:58:04 and 06:58:23 UTC,
+    probing /.git/config, /, /.git/HEAD, /graphql and /adatkezelesi-szabalyzat while claiming Baiduspider,
+    GPTBot, bingbot and Google-CloudVertexBot identities with identical RAW throughout. The closest controlled
+    reference is Go 1.27.3 / net/http / crypto/tls at RAW distance 0.17711538461538: identical cipher list,
+    no 0032 extension, different ordered signature algorithms and no ALPN instead of h2. The same JA4 also
+    appears with /.git/config probes in the other live log; TLS similarity does not establish Go or a shared
+    operator, and these request headers do not establish successful access to Git data.'
+  evidence:
+  - references/sources/live-traffic/artmedic-debug-request-headers.log:3655
+  - references/sources/live-traffic/artmedic-debug-request-headers.log:3673
+  - references/sources/live-traffic/artmedic-debug-request-headers.log:3682
+  - references/sources/live-traffic/artmedic-debug-request-headers.log:3692
+  - references/sources/live-traffic/debug-request-headers.log:16778
+  - references/sources/workflow/results.json
+- id: openssl-like-secret-scanner-psk-offer
+  ja4: t13d1115h2_c5d436628c5c_934397ce148c
+  raw: t13d1115h2_1301,1302,1303,c023,c024,c027,c028,c02b,c02c,c02f,c030_0005,000a,000b,000d,0016,0017,001b,0023,0029,002b,002d,0033,ff01_0905,0906,0904,0403,0503,0603,0807,0808,081a,081b,081c,0809,080a,080b,0804,0805,0806,0401,0501,0601,0303,0301,0302,0402,0502,0602
+  family: null
+  label: OpenSSL 3.5/3.6-like HTTP/2 secret scanner (PSK offer)
+  verification: corroborated
+  notes: Observed HTTP/2 configuration/secret-file probing from 34.62.31.226 on 2026-11-08, including /.env, /.aws/credentials,
+    /.claude/settings.json and /.cursor/mcp.json. All 26 ordered signature algorithms match the controlled OpenSSL
+    3.5.0 and 3.6.0 probes. The cipher rule DEFAULT:!kRSA:!kDHE:!SHA1:!CHACHA20 reproduces the observed 11-cipher
+    set with local OpenSSL 3.0.22; this is a derived equivalent rule, not a recovered scanner configuration. Compared
+    with the measured OpenSSL 3.5.0 probe, 19 cipher entries are absent and extensions 0005 (OCSP status_request)
+    and 001b (compress_certificate) are present. This subsequent variant also offers 0029 (pre_shared_key), consistent
+    with attempted session resumption; success is not established. These observations do not establish the scanner
+    language, library, exact OpenSSL version, operator or successful secret retrieval.
+  evidence:
+  - references/sources/live-traffic/artmedic-debug-request-headers.log:66193
+  - https://github.com/szepeviktor/mod_ja4/actions/runs/42450015655
+  - references/sources/openssl/workflow-42450015655/results.json
+  - references/scanner-vs-openssl-3.5.0.md
+  - references/sources/openssl/scanner-vs-3.5.0.json
