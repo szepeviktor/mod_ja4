@@ -43,6 +43,15 @@ CASES = [
      'cp Cargo.lock /results/rust-Cargo.lock'),
 ]
 
+# Same compiler, C probe, ALPN and build flags for every upstream OpenSSL release.
+# Commit pins are checked after cloning, before any upstream build script runs.
+OPENSSL_VERSIONS = json.loads((CLIENTS / 'openssl-versions.json').read_text())
+for release in OPENSSL_VERSIONS:
+    key = f"openssl-{release['version']}"
+    CASES.append((key, f"OpenSSL {release['version']}", 'gcc:12-bookworm',
+                  'OpenSSL BIO / ALPN h2,http/1.1',
+                  f"bash /clients/build-openssl.sh {release['tag']} {release['commit']} {key}"))
+
 WINDOWS_CASE = ('powershell', 'PowerShell', 'windows-2025',
                 'Invoke-WebRequest / .NET / Schannel', '')
 MACOS_CASE = ('urlsession', 'Swift / URLSession', 'macos-15',
@@ -85,7 +94,10 @@ def write_report(records, error=None):
         'is parsed by the same ja4.c implementation.',
         'The C OpenSSL measurement represents the shared C/C++ reference. All clients verify the server certificate '
         'and hostname using the local test CA as a trust anchor. '
-        'No external HTTPS target is contacted.', '',
+        'No external HTTPS target is contacted. The OpenSSL version matrix builds pinned upstream '
+        'commits with the same compiler and probe, advertises h2,http/1.1 and keeps TLS cipher, '
+        'signature and security defaults. Each row measures a fresh connection; session resumption '
+        'is not measured. Build dependencies and upstream sources are fetched before measurement.', '',
         '| Language | Docker image / runner | HTTPS API | Runtime / TLS | JA4 | Result |',
         '| --- | --- | --- | --- | --- | --- |',
     ]
@@ -165,7 +177,8 @@ def collect(cases, skip_build=False):
                     run(['docker', 'run', '--rm', '--name', client_name, '--network', NETWORK,
                          '-v', f'{CLIENTS}:/clients:ro', '-v', f'{RESULTS}:/results',
                          '-v', f'{RESULTS / "ca.pem"}:/fixture/ca.pem:ro',
-                         image, 'bash', '-euc', command], stdout=out, stderr=err, timeout=600)
+                         image, 'bash', '-euc', command], stdout=out, stderr=err,
+                        timeout=1200 if key.startswith('openssl-') else 600)
                 succeeded = True
             except (subprocess.SubprocessError, OSError) as exc:
                 print(f'{language} failed: {exc}', flush=True)

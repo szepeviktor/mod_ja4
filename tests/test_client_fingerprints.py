@@ -81,6 +81,15 @@ class MatrixReportTests(unittest.TestCase):
         self.assertFalse(missing['success'])
         self.assertEqual(missing['runtime'], 'Missing matrix result')
 
+    def test_missing_openssl_release_preserves_system_openssl_and_other_releases(self):
+        self.seed(missing='openssl-3.5.0')
+        self.assertEqual(runner.aggregate(self.inputs), 1)
+        rows = {row['language']: row for row in self.records()}
+        self.assertFalse(rows['OpenSSL 3.5.0']['success'])
+        self.assertTrue(rows['OpenSSL 3.4.0']['success'])
+        self.assertTrue(rows['OpenSSL 3.6.0']['success'])
+        self.assertTrue(rows['C / C++ / OpenSSL']['success'])
+
     def test_missing_macos_capture_is_reported(self):
         self.seed(missing='urlsession')
         self.assertEqual(runner.aggregate(self.inputs), 1)

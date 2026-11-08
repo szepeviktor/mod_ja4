@@ -1,0 +1,77 @@
+[
+  {
+    "version": "1.0.2",
+    "tag": "OpenSSL_1_0_2",
+    "commit": "4ac0329582829f5378d8078c8d314ad37db87736"
+  },
+  {
+    "version": "1.0.2a",
+    "tag": "OpenSSL_1_0_2a",
+    "commit": "3df69d3aefde7671053d4e3c242b228e5d79c83f"
+  },
+  {
+    "version": "1.0.2b",
+    "tag": "OpenSSL_1_0_2b",
+    "commit": "7b560c174dcd569795f5be66e0c091d1be440614"
+  },
+  {
+    "version": "1.0.2h",
+    "tag": "OpenSSL_1_0_2h",
+    "commit": "5dd94f1847c744929a3bd24819f1c99644bb18c7"
+  },
+  {
+    "version": "1.1.0",
+    "tag": "OpenSSL_1_1_0",
+    "commit": "abd30777cc72029e8a44e4b67201cae8ed3d19c1"
+  },
+  {
+    "version": "1.1.1",
+    "tag": "OpenSSL_1_1_1",
+    "commit": "1708e3e85b4a86bae26860aa5d2913fc8eff6086"
+  },
+  {
+    "version": "3.0.0",
+    "tag": "openssl-3.0.0",
+    "commit": "89cd17a031e022211684eb7eb41190cf1910f9fa"
+  },
+  {
+    "version": "3.1.0",
+    "tag": "openssl-3.1.0",
+    "commit": "a92271e03a8d0dee507b6f1e7f49512568b2c7ad"
+  },
+  {
+    "version": "3.2.0",
+    "tag": "openssl-3.2.0",
+    "commit": "cf2877791ce7508684109664f467c9e40987692f"
+  },
+  {
+    "version": "3.3.0",
+    "tag": "openssl-3.3.0",
+    "commit": "4cb31128b5790819dfeea2739fbde265f71a10a2"
+  },
+  {
+    "version": "3.4.0",
+    "tag": "openssl-3.4.0",
+    "commit": "98acb6b02839c609ef5b837794e08d906d965335"
+  },
+  {
+    "version": "3.5.0",
+    "tag": "openssl-3.5.0",
+    "commit": "636dfadc70ce26f2473870570bfd9ec352806b1d"
+  },
+  {
+    "version": "3.6.0",
+    "tag": "openssl-3.6.0",
+    "commit": "7b371d80d959ec9ab4139d09d78e83c090de9779"
+  },
+  {
+    "version": "4.0.0",
+    "tag": "openssl-4.0.0",
+    "commit": "11b7b6ea3b65a584e1d31408ed1bdb139465cffd"
+  },
+  {
+    "version": "4.1.0",
+    "tag": "openssl-4.1.0",
+    "commit": "2f4e3a5fec05394068cfa7379890ab552483a8a6"
+  }
+]

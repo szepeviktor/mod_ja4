@@ -2,7 +2,7 @@ FROM debian:13-slim
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
-        apache2 apache2-dev build-essential libssl-dev libtool-bin openssl \
+        apache2 apache2-dev build-essential libssl-dev libtool-bin openssl python3 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
@@ -34,4 +34,6 @@ RUN make \
     done
 
 COPY tests/client-fingerprints/server.conf /etc/apache2/sites-enabled/ja4-test.conf
+COPY tests/client-fingerprints/openssl-versions.json /tmp/openssl-versions.json
+RUN python3 -c 'import json, pathlib; [pathlib.Path("/var/www/html/openssl-" + release["version"] + ".txt").write_text("ok\n") for release in json.load(open("/tmp/openssl-versions.json"))]'
 CMD ["apache2ctl", "-D", "FOREGROUND"]
